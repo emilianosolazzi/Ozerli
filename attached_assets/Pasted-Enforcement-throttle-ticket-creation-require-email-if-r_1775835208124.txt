@@ -1,0 +1,161 @@
+Enforcement
+	•	throttle ticket creation
+	•	require email if risky
+	•	shadow queue spam
+
+No ML needed initially—rule-based is enough.
+
+⸻
+
+3. User Flows
+
+3.1 Normal user (mainstream)
+	1.	Click “Support”
+	2.	Enter email OR connect wallet
+	3.	Submit ticket
+	4.	Receives email replies
+	5.	Never sees crypto unless they want to
+
+⸻
+
+3.2 Crypto-native user
+	1.	Connect wallet
+	2.	Sign message (SIWE)
+	3.	Submit ticket
+	4.	Can verify:
+	•	staff signatures
+	•	message integrity
+
+⸻
+
+3.3 Staff workflow
+
+Dashboard:
+	•	Ticket queue
+	•	Risk score visible
+	•	Identity info
+
+When replying:
+	•	System signs response automatically
+
+⸻
+
+4. UI (keep it minimal)
+
+User side
+	•	Clean support form
+	•	Email thread view
+	•	Optional “verify message” button
+
+Admin side
+	•	Zendesk-style queue
+	•	Risk indicators
+	•	Identity panel
+
+No chat rooms. No channels.
+
+⸻
+
+5. Tech Stack (practical)
+
+Backend
+	•	Node.js (Fastify or NestJS)
+	•	PostgreSQL
+	•	Redis (rate limiting)
+
+Crypto
+	•	ethers.js / viem
+	•	SIWE
+	•	keccak256 hashing
+
+Frontend
+	•	Next.js
+	•	Tailwind (fast iteration)
+
+Infra
+	•	Vercel (frontend)
+	•	Fly.io / AWS (backend)
+
+Optional chain
+	•	Base or Arbitrum for anchoring
+
+⸻
+
+6. What makes this defensible
+
+Not UI. Not tickets.
+
+These 3 things:
+
+1. Verifiable support
+	•	No other helpdesk does signed responses
+
+2. Economic anti-spam
+	•	You can evolve into:
+	•	stake-to-ticket
+	•	burn-to-priority
+	•	reputation-weighted queues
+
+3. Auditability
+	•	Critical for DAOs handling funds
+
+⸻
+
+7. Monetization (simple, real)
+
+SaaS pricing
+	•	$49/mo → small teams
+	•	$199/mo → startups
+	•	$999/mo → DAOs / protocols
+
+Add-ons
+	•	On-chain anchoring
+	•	Advanced anti-bot module
+	•	Reputation API
+
+⸻
+
+8. 2-week MVP build plan
+
+Week 1
+	•	Auth (wallet + email)
+	•	Ticket creation
+	•	Admin dashboard (basic)
+	•	Message storage
+
+Week 2
+	•	Message signing
+	•	Hash chaining
+	•	Email integration (SendGrid)
+	•	Basic risk scoring
+
+Ship.
+
+⸻
+
+9. What NOT to build (common failure traps)
+
+Do NOT:
+	•	build a Discord clone
+	•	add tokens early
+	•	over-engineer identity
+	•	go full on-chain
+
+You’re solving:
+
+trust + coordination, not “community vibes”
+
+⸻
+
+Bottom line
+
+Your edge is not “better UX than Discord.”
+
+It’s:
+
+making every interaction verifiable, attributable, and resistant to adversarial behavior—while looking like a normal helpdesk.
+
+If you want next step, I can:
+	•	design the exact DB schema
+	•	write the signing/verification module
+	•	or define the anti-bot scoring model in detail

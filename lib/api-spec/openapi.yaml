@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TrustDesk API - Verifiable support platform
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: tickets
+    description: Ticket management
+  - name: messages
+    description: Message operations
+  - name: users
+    description: User management
+  - name: staff
+    description: Staff operations
+  - name: dashboard
+    description: Dashboard summary endpoints
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +36,356 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/session:
+    get:
+      operationId: getSession
+      tags: [auth]
+      summary: Get current session
+      responses:
+        "200":
+          description: Session info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+
+  /auth/email/request-otp:
+    post:
+      operationId: requestEmailOtp
+      tags: [auth]
+      summary: Request email OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestEmailOtpBody"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /auth/email/verify-otp:
+    post:
+      operationId: verifyEmailOtp
+      tags: [auth]
+      summary: Verify email OTP and authenticate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailOtpBody"
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/wallet/nonce:
+    get:
+      operationId: getWalletNonce
+      tags: [auth]
+      summary: Get nonce for SIWE signing
+      responses:
+        "200":
+          description: Nonce for SIWE
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NonceResponse"
+
+  /auth/wallet/verify:
+    post:
+      operationId: verifyWalletSignature
+      tags: [auth]
+      summary: Verify SIWE signature and authenticate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyWalletBody"
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  # Tickets
+  /tickets:
+    get:
+      operationId: listTickets
+      tags: [tickets]
+      summary: List tickets (user sees own, staff sees all)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketListResponse"
+
+    post:
+      operationId: createTicket
+      tags: [tickets]
+      summary: Create a new support ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTicketBody"
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+  /tickets/{ticketId}:
+    get:
+      operationId: getTicket
+      tags: [tickets]
+      summary: Get a ticket by ID
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketWithMessages"
+
+    patch:
+      operationId: updateTicket
+      tags: [tickets]
+      summary: Update ticket (staff only)
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTicketBody"
+      responses:
+        "200":
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+  /tickets/{ticketId}/messages:
+    post:
+      operationId: sendMessage
+      tags: [messages]
+      summary: Send a message to a ticket
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageBody"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /tickets/{ticketId}/verify:
+    get:
+      operationId: verifyTicketIntegrity
+      tags: [tickets]
+      summary: Verify the hash chain integrity of a ticket
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Integrity verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntegrityResult"
+
+  # Users
+  /users/me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID (staff only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithRisk"
+
+  /users/{userId}/ban:
+    post:
+      operationId: banUser
+      tags: [staff]
+      summary: Ban a user (staff only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  # Dashboard (wow endpoints)
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityFeed"
+
+  /dashboard/risk-overview:
+    get:
+      operationId: getRiskOverview
+      tags: [dashboard]
+      summary: Get risk/anti-abuse overview
+      responses:
+        "200":
+          description: Risk overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskOverview"
+
+  /staff/actions:
+    get:
+      operationId: listStaffActions
+      tags: [staff]
+      summary: List staff actions audit log
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Staff actions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffActionList"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +393,366 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    OkResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required: [ok]
+
+    SessionResponse:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/User"
+      required: [authenticated]
+
+    AuthResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/User"
+      required: [ok]
+
+    RequestEmailOtpBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required: [email]
+
+    VerifyEmailOtpBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        otp:
+          type: string
+      required: [email, otp]
+
+    NonceResponse:
+      type: object
+      properties:
+        nonce:
+          type: string
+      required: [nonce]
+
+    VerifyWalletBody:
+      type: object
+      properties:
+        message:
+          type: string
+        signature:
+          type: string
+        address:
+          type: string
+      required: [message, signature, address]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        primaryWallet:
+          type: string
+          nullable: true
+        primaryEmail:
+          type: string
+          nullable: true
+        reputationScore:
+          type: number
+        riskScore:
+          type: number
+        isStaff:
+          type: boolean
+        isBanned:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, reputationScore, riskScore, isStaff, isBanned, createdAt]
+
+    UserWithRisk:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          properties:
+            recentRiskEvents:
+              type: array
+              items:
+                $ref: "#/components/schemas/RiskEvent"
+          required: [recentRiskEvents]
+
+    RiskEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        eventType:
+          type: string
+        scoreDelta:
+          type: number
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, eventType, createdAt]
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+        creatorId:
+          type: string
+        status:
+          type: string
+          enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
+        subject:
+          type: string
+          nullable: true
+        priority:
+          type: string
+          enum: [LOW, NORMAL, HIGH, URGENT]
+        riskScore:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastMessageAt:
+          type: string
+          format: date-time
+          nullable: true
+        creator:
+          $ref: "#/components/schemas/User"
+      required: [id, creatorId, status, priority, riskScore, createdAt, updatedAt]
+
+    TicketListResponse:
+      type: object
+      properties:
+        tickets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ticket"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required: [tickets, total, page, limit]
+
+    TicketWithMessages:
+      allOf:
+        - $ref: "#/components/schemas/Ticket"
+        - type: object
+          properties:
+            messages:
+              type: array
+              items:
+                $ref: "#/components/schemas/Message"
+          required: [messages]
+
+    CreateTicketBody:
+      type: object
+      properties:
+        subject:
+          type: string
+        content:
+          type: string
+        priority:
+          type: string
+          enum: [LOW, NORMAL, HIGH, URGENT]
+      required: [subject, content]
+
+    UpdateTicketBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
+        priority:
+          type: string
+          enum: [LOW, NORMAL, HIGH, URGENT]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        ticketId:
+          type: string
+        senderId:
+          type: string
+        role:
+          type: string
+          enum: [USER, STAFF, SYSTEM]
+        content:
+          type: string
+        sequenceNumber:
+          type: integer
+        prevHash:
+          type: string
+          nullable: true
+        messageHash:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        signature:
+          $ref: "#/components/schemas/MessageSignature"
+        sender:
+          $ref: "#/components/schemas/User"
+      required: [id, ticketId, senderId, role, content, sequenceNumber, messageHash, createdAt]
+
+    MessageSignature:
+      type: object
+      properties:
+        id:
+          type: string
+        signature:
+          type: string
+        publicKey:
+          type: string
+        signatureType:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, signature, publicKey, signatureType, createdAt]
+
+    SendMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required: [content]
+
+    IntegrityResult:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        messageCount:
+          type: integer
+        brokenAt:
+          type: integer
+          nullable: true
+        details:
+          type: string
+      required: [valid, messageCount]
+
+    DashboardSummary:
+      type: object
+      properties:
+        openTickets:
+          type: integer
+        inProgressTickets:
+          type: integer
+        resolvedToday:
+          type: integer
+        totalUsers:
+          type: integer
+        highRiskUsers:
+          type: integer
+        avgResponseTimeMinutes:
+          type: number
+        ticketsByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+        ticketsByPriority:
+          type: object
+          additionalProperties:
+            type: integer
+      required: [openTickets, inProgressTickets, resolvedToday, totalUsers, highRiskUsers, avgResponseTimeMinutes, ticketsByStatus, ticketsByPriority]
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [TICKET_CREATED, MESSAGE_SENT, STATUS_CHANGED, USER_BANNED, TICKET_RESOLVED]
+        ticketId:
+          type: string
+          nullable: true
+        userId:
+          type: string
+          nullable: true
+        description:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required: [id, type, description, timestamp]
+
+    ActivityFeed:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+      required: [items]
+
+    RiskOverview:
+      type: object
+      properties:
+        highRiskCount:
+          type: integer
+        mediumRiskCount:
+          type: integer
+        lowRiskCount:
+          type: integer
+        recentEvents:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskEvent"
+        flaggedTickets:
+          type: integer
+      required: [highRiskCount, mediumRiskCount, lowRiskCount, recentEvents, flaggedTickets]
+
+    StaffAction:
+      type: object
+      properties:
+        id:
+          type: string
+        staffId:
+          type: string
+          nullable: true
+        ticketId:
+          type: string
+          nullable: true
+        actionType:
+          type: string
+        metadata:
+          type: object
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        staff:
+          $ref: "#/components/schemas/User"
+      required: [id, actionType, createdAt]
+
+    StaffActionList:
+      type: object
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/StaffAction"
+      required: [actions]
