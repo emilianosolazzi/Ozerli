@@ -61,13 +61,20 @@ TrustDesk is a verifiable support platform where every staff response is cryptog
 
 ## Frontend Routes
 
-- `/` — Landing page: login (email OTP + wallet) + unauthenticated ticket form
+- `/` — Landing page: login (email OTP + wallet) + feature showcase (dark mode, no broken unauth form)
 - `/dashboard` — Staff dashboard: summary stats, activity feed, risk overview
-- `/tickets` — Ticket list (user sees own, staff sees all), filterable
-- `/tickets/:ticketId` — Ticket detail: full hash-chained message thread + verify button
+- `/tickets` — Ticket list (user sees own, staff sees all), filterable by status/search
+- `/tickets/:ticketId` — Ticket detail: full hash-chained message thread + lazy "Verify Chain" query
 - `/users/:userId` — User profile (staff only): trust scores, risk events, ban button
 - `/profile` — Current user's own identity and reputation
 - `/audit` — Staff audit log of all actions
+
+## Known Limitations / TODOs
+
+- **SIWE auth**: Wallet login uses a random demo address + dummy signature (real EIP-4361 SIWE not fully wired)
+- **Email OTP in dev**: OTP codes are printed to the API server console (not emailed)
+- **ED25519 keypair**: Generated in-memory at server start — regenerates on restart (fine for demo)
+- **Guest ticket submission**: Removed in favor of directing guests to sign in first
 
 ## API Endpoints
 

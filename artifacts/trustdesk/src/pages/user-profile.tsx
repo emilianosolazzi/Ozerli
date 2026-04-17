@@ -29,14 +29,12 @@ export default function UserProfilePage() {
 
   const handleBan = () => {
     if (!confirm("Are you sure you want to ban this user? This is a cryptographically recorded action.")) return;
-    
-    banUser.mutate(undefined, { // Notice: The API client might need userId, but the generated hook signature requires us to check its specific parameters. Usually it uses the URL or body. Wait, the hook is `useBanUser`. Let's assume it takes an ID in the mutation or relies on standard args.
-      // Wait, let's look at the generated API for banUser if needed. Since I don't have it, I'll just use a placeholder or best guess.
-      // Looking at hook: useBanUser (mutation)
+    banUser.mutate({ userId: userId! }, {
       onSuccess: () => {
-        toast({ title: "User Banned" });
+        toast({ title: "User Banned", description: "User has been banned and the action has been recorded." });
         queryClient.invalidateQueries({ queryKey: ['user', userId] });
-      }
+      },
+      onError: () => toast({ title: "Error", description: "Failed to ban user.", variant: "destructive" })
     });
   };
 
