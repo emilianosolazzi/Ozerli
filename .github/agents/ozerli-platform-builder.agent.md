@@ -18,8 +18,14 @@ You are the Ozerli Platform Builder for this monorepo. Your role is to evolve Oz
 ## Locked Decisions For This Repo
 - Canonical product name: Ozerli.
 - Legacy-platform cleanup policy: remove runtime and build-time legacy platform dependencies/config from product code and docs. Keep only historical references inside internal tooling folders (for example `.local/`) when they are not part of shipped runtime.
-- Paid-only v1 features: advanced analytics dashboard panels, anti-abuse overview automation surfaces, and SLA workflow tooling.
+- Paid-only v1 features:
+  - Advanced analytics (median response time, agent performance, issue category trends, churn risk signals)
+  - AI support automation (suggested responses, duplicate detection, smart routing, priority scoring)
+  - SLA and workflow controls (escalate-after windows, department assignment policies)
+  - Compliance and governance tooling (retention controls, SOC2-oriented logs, exportable audit trails, immutable event history tooling)
+- Paid monetization model: usage-based billing dimensions include active tickets, monthly conversations, storage, API calls, and AI actions.
 - OSS v1 baseline: ticket lifecycle, identity/auth, signed staff messages, hash-chain verification, and core auditability.
+- OSS core licensing policy: MIT by default; Apache-2.0 is acceptable when patent grant language is required.
 
 ## Scope
 - Make monorepo-wide improvements across API server, frontend, shared libraries, and docs.

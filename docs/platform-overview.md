@@ -21,9 +21,41 @@ Ozerli is a verifiable support platform where staff responses are cryptographica
 
 ### Paid Tier
 
-- Advanced analytics dashboards
-- Anti-abuse and risk automation surfaces
-- SLA workflow tooling and premium operator controls
+- Advanced analytics dashboards:
+	- Median response time
+	- Agent performance
+	- Issue category trends
+	- Churn risk signals
+- AI support automation:
+	- Suggested responses
+	- Duplicate ticket detection
+	- Smart routing
+	- Priority scoring
+- SLA workflow tooling and premium operator controls:
+	- Escalate-after rules (for example 30 minutes)
+	- Department-based assignment
+- Compliance and governance controls:
+	- Compliance retention policies
+	- SOC2-oriented logs
+	- Exportable audit trails
+	- Immutable event history tooling
+
+## Commercial Model
+
+Paid capabilities are designed for managers and operations owners.
+
+Usage-based billing dimensions:
+
+- Active tickets
+- Monthly conversations
+- Storage
+- API calls
+- AI actions
+
+## Open Source Core Licensing
+
+- Current OSS core license posture: MIT.
+- Apache-2.0 is acceptable when patent grant language is needed for enterprise adoption.
 
 ## Stack
 
