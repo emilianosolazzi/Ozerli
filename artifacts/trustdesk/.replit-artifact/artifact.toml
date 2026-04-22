@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "TrustDesk"
+title = "Ozerli"
 version = "1.0.0"
 id = "artifacts/trustdesk"
 router = "path"
@@ -15,10 +15,10 @@ paths = [ "/" ]
 localPort = 20392
 
 [services.development]
-run = "pnpm --filter @workspace/trustdesk run dev"
+run = "pnpm --filter @workspace/ozerli run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/trustdesk", "run", "build" ]
+build = [ "pnpm", "--filter", "@workspace/ozerli", "run", "build" ]
 publicDir = "artifacts/trustdesk/dist/public"
 serve = "static"
 

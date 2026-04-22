@@ -41,12 +41,14 @@ export default function TicketDetailPage() {
 }
 
 function TicketThread({ ticketId }: { ticketId: string }) {
+  const { isStaff } = useAuth();
   const { data: ticket, isLoading, refetch } = useGetTicket(ticketId, {
     query: { enabled: !!ticketId, queryKey: ['ticket', ticketId] }
   });
   
   const [content, setContent] = useState("");
   const sendMessage = useSendMessage();
+  const updateTicket = useUpdateTicket();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -67,6 +69,24 @@ function TicketThread({ ticketId }: { ticketId: string }) {
     });
   };
 
+  const handleQuickStatusChange = (status: UpdateTicketBodyStatus) => {
+    updateTicket.mutate(
+      { ticketId, data: { status } },
+      {
+        onSuccess: () => {
+          refetch();
+          toast({ title: "Status updated" });
+        },
+        onError: () =>
+          toast({
+            title: "Error",
+            description: "Failed to update status",
+            variant: "destructive",
+          }),
+      },
+    );
+  };
+
   if (isLoading) return <div className="h-full flex justify-center items-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
   if (!ticket) return <div className="p-8 text-muted-foreground">Ticket not found.</div>;
 
@@ -85,7 +105,22 @@ function TicketThread({ ticketId }: { ticketId: string }) {
           </div>
           <h2 className="text-xl font-bold">{ticket.subject || "No Subject"}</h2>
         </div>
-        <IntegrityCheck ticketId={ticket.id} />
+        <div className="flex items-center gap-2">
+          {isStaff && (
+            <Select value={ticket.status} onValueChange={handleQuickStatusChange} disabled={updateTicket.isPending}>
+              <SelectTrigger className="w-[170px] font-mono text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="OPEN">OPEN</SelectItem>
+                <SelectItem value="IN_PROGRESS">IN PROGRESS</SelectItem>
+                <SelectItem value="RESOLVED">RESOLVED</SelectItem>
+                <SelectItem value="CLOSED">CLOSED</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          <IntegrityCheck ticketId={ticket.id} />
+        </div>
       </div>
 
       <ScrollArea className="flex-1 p-4 md:p-6">

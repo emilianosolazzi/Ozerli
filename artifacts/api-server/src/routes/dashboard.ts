@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { eq, gte, sql, desc, and, lt } from "drizzle-orm";
+import { Router, type IRouter, type Response } from "express";
+import { eq, gte, sql, desc, and, lt, inArray } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -10,9 +10,27 @@ import {
 } from "@workspace/db";
 import { requireStaff } from "../middlewares/auth";
 import { GetRecentActivityQueryParams, ListStaffActionsQueryParams } from "@workspace/api-zod";
+import { isPaidTierEnabled } from "../lib/features";
+import {
+  getSlaTargetMinutes,
+  getSlaTargetsHours,
+  updateSlaTargetsHours,
+  validateSlaTargetsPatch,
+} from "../lib/sla";
 import "../lib/session";
 
 const router: IRouter = Router();
+
+function requirePaidTier(res: Response, capability: string): boolean {
+  if (isPaidTierEnabled()) {
+    return true;
+  }
+
+  res.status(403).json({
+    error: `${capability} is available in the paid tier. Set OZERLI_TIER=paid to enable it.`,
+  });
+  return false;
+}
 
 router.get("/dashboard/summary", requireStaff, async (req, res): Promise<void> => {
   const today = new Date();
@@ -73,6 +91,10 @@ router.get("/dashboard/summary", requireStaff, async (req, res): Promise<void> =
 });
 
 router.get("/dashboard/activity", requireStaff, async (req, res): Promise<void> => {
+  if (!requirePaidTier(res, "Advanced activity feed")) {
+    return;
+  }
+
   const queryParams = GetRecentActivityQueryParams.safeParse(req.query);
   const limit = queryParams.success ? (queryParams.data.limit ?? 20) : 20;
 
@@ -126,6 +148,10 @@ router.get("/dashboard/activity", requireStaff, async (req, res): Promise<void> 
 });
 
 router.get("/dashboard/risk-overview", requireStaff, async (req, res): Promise<void> => {
+  if (!requirePaidTier(res, "Risk overview")) {
+    return;
+  }
+
   const [highRisk] = await db
     .select({ count: sql<number>`count(*)` })
     .from(usersTable)
@@ -159,6 +185,86 @@ router.get("/dashboard/risk-overview", requireStaff, async (req, res): Promise<v
     recentEvents,
     flaggedTickets: Number(flaggedTickets?.count ?? 0),
   });
+});
+
+router.get("/dashboard/sla-overview", requireStaff, async (_req, res): Promise<void> => {
+  if (!requirePaidTier(res, "SLA workflow controls")) {
+    return;
+  }
+
+  const targetsHours = getSlaTargetsHours();
+
+  const activeTickets = await db
+    .select({
+      id: ticketsTable.id,
+      status: ticketsTable.status,
+      priority: ticketsTable.priority,
+      createdAt: ticketsTable.createdAt,
+      updatedAt: ticketsTable.updatedAt,
+    })
+    .from(ticketsTable)
+    .where(inArray(ticketsTable.status, ["OPEN", "IN_PROGRESS"]));
+
+  const now = Date.now();
+
+  const sample = activeTickets
+    .map((ticket) => {
+      const targetMinutes = getSlaTargetMinutes(ticket.priority);
+      const elapsedMinutes = Math.max(0, Math.floor((now - ticket.createdAt.getTime()) / 60000));
+      const remainingMinutes = targetMinutes - elapsedMinutes;
+      const state =
+        remainingMinutes < 0 ? "BREACHED" : remainingMinutes <= 60 ? "AT_RISK" : "ON_TRACK";
+
+      return {
+        id: ticket.id,
+        status: ticket.status,
+        priority: ticket.priority,
+        elapsedMinutes,
+        targetMinutes,
+        remainingMinutes,
+        state,
+        updatedAt: ticket.updatedAt,
+      };
+    })
+    .sort((a, b) => a.remainingMinutes - b.remainingMinutes);
+
+  const breachedTickets = sample.filter((ticket) => ticket.state === "BREACHED").length;
+  const atRiskTickets = sample.filter((ticket) => ticket.state === "AT_RISK").length;
+  const onTrackTickets = sample.filter((ticket) => ticket.state === "ON_TRACK").length;
+
+  res.json({
+    targetsHours,
+    totals: {
+      activeTickets: sample.length,
+      breachedTickets,
+      atRiskTickets,
+      onTrackTickets,
+    },
+    sample: sample.slice(0, 8),
+  });
+});
+
+router.patch("/dashboard/sla-targets", requireStaff, async (req, res): Promise<void> => {
+  if (!requirePaidTier(res, "SLA workflow controls")) {
+    return;
+  }
+
+  const parsed = validateSlaTargetsPatch(req.body);
+  if (!parsed.ok) {
+    res.status(400).json({ error: parsed.error });
+    return;
+  }
+
+  const targetsHours = updateSlaTargetsHours(parsed.patch);
+
+  await db.insert(staffActionsTable).values({
+    staffId: req.session.userId!,
+    ticketId: null,
+    actionType: "SLA_TARGETS_UPDATED",
+    metadata: { targetsHours },
+  });
+
+  res.json({ ok: true, targetsHours });
 });
 
 router.get("/staff/actions", requireStaff, async (req, res): Promise<void> => {

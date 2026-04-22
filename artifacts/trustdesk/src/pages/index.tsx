@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { APP_NAME, demoStaffEmail } from "@/lib/brand";
 
 const signSiweMessage = async (nonce: string, address: string) => {
   return `Demo-sig:${nonce}:${address}`;
@@ -38,7 +39,7 @@ export default function IndexPage() {
             <div className="w-10 h-10 bg-primary/15 rounded-lg flex items-center justify-center border border-primary/20">
               <Shield className="w-5 h-5 text-primary" />
             </div>
-            <span className="text-2xl font-mono font-bold tracking-tight">TrustDesk</span>
+            <span className="text-2xl font-mono font-bold tracking-tight">{APP_NAME}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-3 leading-snug">
             Support where every<br />
@@ -103,7 +104,7 @@ function AuthForms() {
       if (!nonceRes.data?.nonce) throw new Error("No nonce");
       const signature = await signSiweMessage(nonceRes.data.nonce, address);
       verifyWallet.mutate({
-        data: { message: `Sign in to TrustDesk\n\nNonce: ${nonceRes.data.nonce}`, signature, address }
+        data: { message: `Sign in to ${APP_NAME}\n\nNonce: ${nonceRes.data.nonce}`, signature, address }
       }, {
         onSuccess: () => {
           queryClient.invalidateQueries();
@@ -289,7 +290,7 @@ function FeatureShowcase() {
       </div>
 
       <p className="text-xs text-muted-foreground/60 font-mono">
-        Demo: use staff@trustdesk.io — OTP appears in server logs
+        Demo: use {demoStaffEmail} — OTP appears in server logs
       </p>
     </div>
   );
