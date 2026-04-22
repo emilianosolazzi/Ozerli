@@ -2,13 +2,13 @@
 
 ## Overview
 
-Ozerli is a verifiable support platform where staff responses are cryptographically signed and ticket messages are hash-chained for tamper evidence. It is designed for high-efficiency support operations across crypto-native and mainstream teams.
+Ozerli is a ticket-first support platform that helps teams reduce duplicate tickets, shorten response times, and provide verifiable support tickets. Cryptographic signing and hash-chained message history are supporting mechanisms for accountability; the product is sold on support outcomes, not on cryptography.
 
 ## Product Positioning
 
+- Value proposition: better support outcomes (fewer duplicates, shorter response times, resolvable tickets) with provable accountability.
 - Ozerli is ticket-first, not chat-first.
-- The product optimizes for triage speed, accountability, and resolution throughput.
-- Crypto verification is available but optional for mainstream user flows.
+- Crypto verification backs the audit story — it is optional for mainstream flows and intentionally de-emphasized in end-user UX.
 
 ## Tier Model
 
@@ -105,6 +105,7 @@ Usage-based billing dimensions:
 - Per-user riskScore and reputationScore
 - Risk events for telemetry and investigations
 - Staff moderation and full action logging
+- Persistent ED25519 signing key stored in PostgreSQL, encrypted at rest with AES-256-GCM; KEK derived via scrypt from `SIGNING_KEY_SECRET` (no third-party KMS dependency)
 
 ## Frontend Routes
 
@@ -120,5 +121,4 @@ Usage-based billing dimensions:
 
 - Wallet auth currently uses demo SIWE verification scaffolding
 - Email OTP is logged to server in development
-- ED25519 keypair is in-memory and regenerated on restart
 - Guest ticket submission is removed in favor of authenticated flows

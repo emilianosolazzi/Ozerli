@@ -4,6 +4,7 @@ import pinoHttp from "pino-http";
 import session from "express-session";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { recordApiCall } from "./lib/usage";
 
 const app: Express = express();
 
@@ -47,6 +48,11 @@ app.use(
     },
   }),
 );
+
+app.use("/api", (_req, _res, next) => {
+  recordApiCall();
+  next();
+});
 
 app.use("/api", router);
 

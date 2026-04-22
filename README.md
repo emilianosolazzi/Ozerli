@@ -1,16 +1,17 @@
 # Ozerli
 
-Ozerli is a verifiable, ticket-first support platform built for teams that need both speed and accountability. Staff replies can be cryptographically signed, ticket messages are hash-chained for tamper evidence, and operations stay focused on resolution throughput instead of chat noise.
+Ozerli is a ticket-first support platform that helps teams reduce duplicate tickets, shorten response times, and provide verifiable support tickets. The value proposition is simple: better support outcomes, backed by provable accountability.
 
 ## Why Ozerli
 
-Ozerli is designed for support teams that want mainstream usability with stronger trust guarantees.
+Teams pick Ozerli when they want measurable support performance (faster triage, fewer duplicates, shorter response times) and an auditable record of who did what, when. Verifiability is how we back those outcomes — it is not the feature itself.
 
 ## Benefits At A Glance
 
-- Faster triage: ticket-first workflows optimize ownership, status movement, and queue management.
-- Stronger trust: signed staff replies and hash-chained message threads make tampering evident.
-- Better accountability: staff actions are auditable, with explicit operational and moderation trails.
+- Reduce duplicate tickets: smart routing and duplicate detection keep agents from answering the same question twice.
+- Shorten response times: ticket-first workflows, SLA rules, and AI-assisted replies move work forward faster than chat.
+- Provide verifiable support tickets: every ticket has a tamper-evident message history and optionally signed staff replies, so customers and auditors can trust the record.
+- Provable accountability: staff actions, ownership changes, and moderation are captured in an auditable trail suitable for SOC2-style review.
 - Clear upgrade path: open-source core for essential support operations, paid tier for manager-grade analytics, automation, and compliance controls.
 
 ## Tier Model
@@ -159,6 +160,7 @@ Note: the web app calls API routes using same-origin `/api/*` paths. If you run 
 - NODE_ENV (optional): defaults to development behavior when unset
 - LOG_LEVEL (optional): pino log level, defaults to `info`
 - OZERLI_TIER (optional): `oss` (default) or `paid`
+- SIGNING_KEY_SECRET (recommended): dedicated secret used to derive the KEK that encrypts the server ED25519 signing key at rest. Falls back to SESSION_SECRET if unset.
 - TRUSTDESK_TIER (legacy fallback): accepted for backwards compatibility
 
 ### Frontend Environment Variables
@@ -181,15 +183,17 @@ Note: the web app calls API routes using same-origin `/api/*` paths. If you run 
 
 ## Trust And Audit Model
 
-- Message integrity: each ticket message includes hash-chain fields (`prevHash`, `messageHash`)
-- Staff authenticity: staff responses can be signed and independently verified
-- Operational transparency: staff actions and risk events are recorded for review
+Verifiability exists to back the support outcomes Ozerli promises — it is a supporting mechanism, not a headline feature.
+
+- Message integrity: each ticket message includes hash-chain fields (`prevHash`, `messageHash`) so any tampering is detectable.
+- Staff authenticity: staff responses can be signed with the server ED25519 key and independently verified.
+- Operational transparency: staff actions and risk events are recorded for review.
+- Persistent key management: the ED25519 signing key is stored in PostgreSQL, encrypted at rest with AES-256-GCM (KEK derived via scrypt from `SIGNING_KEY_SECRET`). No third-party KMS required; the same key survives restarts, so historical signatures stay verifiable.
 
 ## Current Limitations
 
 - Wallet auth currently uses demo SIWE verification scaffolding
 - Email OTP is logged to server output in development
-- ED25519 keypair is generated in memory and rotates on server restart
 - Guest ticket submission is removed in favor of authenticated flows
 
 ## Contributing
@@ -201,9 +205,9 @@ Note: the web app calls API routes using same-origin `/api/*` paths. If you run 
 
 ## License
 
-Current OSS core license: MIT.
+Ozerli's open-source core is released under the [MIT License](LICENSE).
 
-Alternative OSS core option under consideration: Apache-2.0 (recommended when explicit patent grant language is required).
+MIT is the finalized OSS core license. Apache-2.0 remains a documented alternative only if an explicit patent grant is later required; changing the license would require an explicit governance decision.
 
 ## README Improvement Suggestions
 

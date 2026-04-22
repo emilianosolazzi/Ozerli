@@ -1,12 +1,18 @@
 export type OzerliTier = "oss" | "paid";
 
+export interface OzerliFeatureFlags {
+  advancedAnalytics: boolean;
+  aiAutomation: boolean;
+  slaWorkflows: boolean;
+  complianceControls: boolean;
+  usageMetering: boolean;
+  /** @deprecated retained for backwards compatibility; mirrors slaWorkflows */
+  riskAutomation: boolean;
+}
+
 export interface OzerliCapabilities {
   tier: OzerliTier;
-  features: {
-    advancedAnalytics: boolean;
-    riskAutomation: boolean;
-    slaWorkflows: boolean;
-  };
+  features: OzerliFeatureFlags;
 }
 
 function normalizeTier(value: string | undefined): OzerliTier {
@@ -37,8 +43,11 @@ export function getOzerliCapabilities(): OzerliCapabilities {
     tier,
     features: {
       advancedAnalytics: paid,
-      riskAutomation: paid,
+      aiAutomation: paid,
       slaWorkflows: paid,
+      complianceControls: paid,
+      usageMetering: paid,
+      riskAutomation: paid,
     },
   };
 }

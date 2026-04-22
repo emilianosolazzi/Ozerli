@@ -3,22 +3,35 @@ import { paidTierEnabled } from "./features";
 
 export type OzerliTier = "oss" | "paid";
 
+export interface OzerliFeatureFlags {
+  advancedAnalytics: boolean;
+  aiAutomation: boolean;
+  slaWorkflows: boolean;
+  complianceControls: boolean;
+  usageMetering: boolean;
+  /** @deprecated retained for backwards compatibility with older API builds */
+  riskAutomation: boolean;
+}
+
 export interface OzerliCapabilities {
   tier: OzerliTier;
-  features: {
-    advancedAnalytics: boolean;
-    riskAutomation: boolean;
-    slaWorkflows: boolean;
+  features: OzerliFeatureFlags;
+}
+
+function buildFallbackFeatures(paid: boolean): OzerliFeatureFlags {
+  return {
+    advancedAnalytics: paid,
+    aiAutomation: paid,
+    slaWorkflows: paid,
+    complianceControls: paid,
+    usageMetering: paid,
+    riskAutomation: paid,
   };
 }
 
 export const fallbackCapabilities: OzerliCapabilities = {
   tier: paidTierEnabled ? "paid" : "oss",
-  features: {
-    advancedAnalytics: paidTierEnabled,
-    riskAutomation: paidTierEnabled,
-    slaWorkflows: paidTierEnabled,
-  },
+  features: buildFallbackFeatures(paidTierEnabled),
 };
 
 function parseCapabilities(input: unknown): OzerliCapabilities | null {
@@ -36,20 +49,25 @@ function parseCapabilities(input: unknown): OzerliCapabilities | null {
     return null;
   }
 
-  if (
-    typeof features.advancedAnalytics !== "boolean" ||
-    typeof features.riskAutomation !== "boolean" ||
-    typeof features.slaWorkflows !== "boolean"
-  ) {
+  const paid = value.tier === "paid";
+  const coerce = (key: string, fallback: boolean): boolean =>
+    typeof features[key] === "boolean" ? (features[key] as boolean) : fallback;
+
+  // Required core flag for forward-compat: if advancedAnalytics is missing we
+  // still accept the payload but derive defaults from the tier.
+  if (typeof features.advancedAnalytics !== "boolean" && typeof features.slaWorkflows !== "boolean") {
     return null;
   }
 
   return {
     tier: value.tier,
     features: {
-      advancedAnalytics: features.advancedAnalytics,
-      riskAutomation: features.riskAutomation,
-      slaWorkflows: features.slaWorkflows,
+      advancedAnalytics: coerce("advancedAnalytics", paid),
+      aiAutomation: coerce("aiAutomation", paid),
+      slaWorkflows: coerce("slaWorkflows", paid),
+      complianceControls: coerce("complianceControls", paid),
+      usageMetering: coerce("usageMetering", paid),
+      riskAutomation: coerce("riskAutomation", paid),
     },
   };
 }
