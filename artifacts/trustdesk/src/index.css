@@ -155,22 +155,23 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 222 47% 7%;
+  /* Graphite + electric teal + soft violet (chain integrity) */
+  --background: 224 39% 6%;
   --foreground: 210 40% 98%;
-  
+
   --border: 217 33% 17%;
   --input: 217 33% 17%;
-  --ring: 175 70% 41%;
+  --ring: 175 80% 45%;
 
-  --card: 222 47% 11%;
+  --card: 222 39% 9%;
   --card-foreground: 210 40% 98%;
   --card-border: 217 33% 17%;
 
-  --popover: 222 47% 11%;
+  --popover: 222 39% 9%;
   --popover-foreground: 210 40% 98%;
   --popover-border: 217 33% 17%;
 
-  --primary: 175 70% 41%;
+  --primary: 175 80% 45%;
   --primary-foreground: 222 47% 11%;
 
   --secondary: 217 33% 17%;
@@ -179,26 +180,26 @@
   --muted: 217 33% 17%;
   --muted-foreground: 215 20.2% 65.1%;
 
-  --accent: 175 70% 41%;
+  --accent: 262 70% 68%;
   --accent-foreground: 222 47% 11%;
 
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
 
-  --sidebar: 222 47% 11%;
+  --sidebar: 222 39% 9%;
   --sidebar-foreground: 210 40% 98%;
   --sidebar-border: 217 33% 17%;
-  --sidebar-primary: 175 70% 41%;
+  --sidebar-primary: 175 80% 45%;
   --sidebar-primary-foreground: 222 47% 11%;
   --sidebar-accent: 217 33% 17%;
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 175 70% 41%;
+  --sidebar-ring: 175 80% 45%;
 
-  --chart-1: 175 70% 41%;
-  --chart-2: 217 33% 17%;
+  --chart-1: 175 80% 45%;
+  --chart-2: 262 70% 68%;
   --chart-3: 45 93% 47%;
   --chart-4: 0 84% 60%;
-  --chart-5: 280 65% 60%;
+  --chart-5: 200 80% 60%;
 }
 
 @layer base {
@@ -269,4 +270,49 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+}
+
+/* Ozerli brand motion + motifs */
+@keyframes ozerli-sig-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.55); }
+  50% { box-shadow: 0 0 0 6px hsl(var(--primary) / 0); }
+}
+@keyframes ozerli-chain-flow {
+  0% { transform: translateY(-100%); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+@keyframes ozerli-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ozerli-stroke {
+  from { stroke-dashoffset: 120; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.ozerli-sig-pulse { animation: ozerli-sig-pulse 2.4s ease-out infinite; }
+.ozerli-fade-up { animation: ozerli-fade-up 0.6s ease-out both; }
+.ozerli-stroke path { stroke-dasharray: 120; animation: ozerli-stroke 1.6s ease-out forwards; }
+
+.ozerli-chainline {
+  position: relative;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, hsl(var(--primary) / 0.45), hsl(var(--accent) / 0.45), transparent);
+  overflow: hidden;
+}
+.ozerli-chainline::after {
+  content: "";
+  position: absolute;
+  inset-inline: -1px;
+  top: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, transparent, hsl(var(--primary)) 50%, transparent);
+  animation: ozerli-chain-flow 3s linear infinite;
+}
+
+.ozerli-hero-glow {
+  background:
+    radial-gradient(60% 40% at 20% 10%, hsl(var(--primary) / 0.12), transparent 60%),
+    radial-gradient(50% 35% at 85% 80%, hsl(var(--accent) / 0.14), transparent 60%);
 }

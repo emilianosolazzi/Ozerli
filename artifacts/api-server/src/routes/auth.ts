@@ -38,7 +38,11 @@ router.post("/auth/email/request-otp", async (req, res): Promise<void> => {
 
   await db.insert(emailOtpTable).values({ email, otp, expiresAt });
 
-  req.log.info({ email, otp }, "OTP generated (dev: logging OTP for testing)");
+  if (process.env.NODE_ENV !== "production") {
+    req.log.info({ email, otp }, "OTP generated (dev: logging OTP for testing)");
+  } else {
+    req.log.info({ email }, "OTP generated");
+  }
 
   res.json({ ok: true });
 });
